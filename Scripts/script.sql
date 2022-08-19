@@ -94,7 +94,7 @@ LIMIT 10; ---(5000*12*10 = 600,000 and 1000*12*10+10000 = 130,000 ... $470,000 (
 Select a.name, a.rating, p.name, p.rating
 from app_store_apps as a
 Join play_store_apps as p
-on a.name = p.name
+USING(name)
 order by a.rating desc;
 
 
