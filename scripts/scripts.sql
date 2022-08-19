@@ -242,7 +242,7 @@ AND play_investment_analysis != 'do not invest' AND app_investment_analysis != '
 ORDER BY orig_play_rating DESC
 LIMIT 10;
 
----Query of Fun rd 2
+---Query of Fun rd 2 - trying CTE with longevity, running into the issue that it's adding name, rating into the column with our aggregation 
 WITH CTE_CASES AS(
 SELECT a.name,
     CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
@@ -265,7 +265,7 @@ CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CA
 ),
 Longevity_years AS (
 SELECT 
-    a.name,
+    a.name, 
     ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
     ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years
 FROM play_store_apps AS p
@@ -274,9 +274,10 @@ USING (rating)
 )
 SELECT DISTINCT a.primary_genre AS apple_genre, p.genres AS google_genre, p.content_rating, p.name,
 p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
-ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGEVITY (has to be to the nearest '0.5')
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, 
 ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
-longevity_years,
+play_longevity_years,
+app_longevity_years,
 MONEY(p.price) AS play_price,
 MONEY(a.price) AS app_price,
 play_purchase_price, 
@@ -294,6 +295,52 @@ WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
 AND play_investment_analysis != 'do not invest' AND app_investment_analysis != 'do not invest'
 ORDER BY orig_play_rating DESC
 LIMIT 10;
+
+---Query FUN
+WITH CTE_CASES AS(
+SELECT a.name,
+    CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END AS play_purchase_price,
+CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END AS app_purchase_price,
+CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 3000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 3000000 THEN 'okay'
+      ELSE 'do not invest' END AS play_investment_analysis,
+CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 150000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 150000 THEN 'okay'
+      ELSE 'do not invest' END AS app_investment_analysis
+ FROM play_store_apps AS p
+ JOIN app_store_apps AS a
+ USING (name)
+)
+SELECT DISTINCT a.primary_genre AS apple_genre, p.genres AS google_genre, p.content_rating, p.name,
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, 
+ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
+ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+MONEY(p.price) AS play_price,
+MONEY(a.price) AS app_price,
+play_purchase_price, 
+app_purchase_price,
+play_investment_analysis,
+app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a  
+USING(name)
+JOIN CTE_CASES
+USING(name)
+WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
+AND play_investment_analysis != 'do not invest' AND app_investment_analysis != 'do not invest'
+ORDER BY orig_play_rating DESC
+LIMIT 10;
+
+
+
 
 
 ---ASOS--apple
