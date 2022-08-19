@@ -1,9 +1,52 @@
+WITH CTE_CASES AS (SELECT a.name AS name, CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END AS play_purchase_price,
+CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END AS app_purchase_price,
+CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great' 
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay' 
+      ELSE 'do not invest' END AS play_investment_analysis,
+CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000 
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great' 
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000 
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay' 
+      ELSE 'do not invest' END AS app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a
+USING(name))
+SELECT DISTINCT p.name, 
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating, 
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGETIVITY (has to be to the nearest '0.5')
+ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating, 
+a.content_rating AS app_content_rating,
+ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+MONEY(p.price) AS play_price, 
+MONEY(a.price) AS app_price,
+play_purchase_price,
+app_purchase_price,
+play_investment_analysis,
+app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a  ---DOING A JOIN BECAUSE THE APP NEEDS TO BE IN BOTH TABLES 
+USING(name)
+JOIN CTE_CASES 
+USING(name)
+WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
+AND play_investment_analysis != 'do not invest' AND app_investment_analysis != 'do not invest'
+ORDER BY orig_play_rating DESC
+LIMIT 10
+
+---^^^ with CTE...v pretty
+
 ---I think this gives me the top 12 apps that appear in BOTH tables, have the longest longevity, lowest price buy out, 
 ---and has received a higher review count (so as to make the rating more reliable- at least that's what I thought)
 SELECT DISTINCT p.name, 
 p.rating AS Orig_play_rating, a.rating AS Orig_app_rating, 
 ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGETIVITY (has to be to the nearest '0.5')
 ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating, 
+a.content_rating AS app_content_rating,
 ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
 ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
 MONEY(p.price) AS play_price, 
@@ -48,10 +91,10 @@ ORDER BY orig_play_rating DESC
 SELECT * 
 FROM app_store_apps
 
-SELECT *
-FROM play_store_apps
-ORDER BY review_count DESC 
----can join on name, rating, price
+SELECT name, content_rating AS app_content_rating
+FROM app_store_apps
+WHERE name IN ('Clash of Clans','Clash Royale','Boom Beach','Geometry Dash Lite','Hay Day','Instagram','Subway Surfers','Trivia Crack','Candy Crush Saga','WhatsApp Messenger','Fruit Ninja®','Temple Run 2')
+GROUP BY name, app_content_rating
 
 SELECT * 
 FROM app_store_apps
