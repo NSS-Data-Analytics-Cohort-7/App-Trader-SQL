@@ -44,6 +44,160 @@ INNER JOIN play_store_apps AS p
 USING (name)
 ORDER BY apple_contentrating DESC;
 
+--Apps that are free in both --There's 261 (292 AREN'T FREE)
+SELECT a.name AS apple, p.name AS google, CAST(a.price AS MONEY) AS apple_price, CAST(p.price AS MONEY) AS google_price
+FROM app_store_apps AS a
+INNER JOIN play_store_apps AS p
+USING (name) 
+WHERE a.price = 0
+AND a.price = 0
+GROUP BY apple, google, apple_price, google_price
+ORDER BY apple_price;
+
+----Hannah's query of fun
+SELECT DISTINCT p.name,
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGEVITY (has to be to the nearest '0.5')
+ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
+ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+MONEY(p.price) AS play_price,
+MONEY(a.price) AS app_price,
+CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END AS play_purchase_price,
+CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END AS app_purchase_price,
+CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END AS play_investment_analysis,
+CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END AS app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a  ---DOING A JOIN BECAUSE THE APP NEEDS TO BE IN BOTH TABLES
+USING(name)
+WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+ORDER BY orig_play_rating DESC
+LIMIT 10;
+
+
+--Genres in both app stores 
+SELECT a.name AS apple_app_name, g.name AS google_app_name, a.primary_genre AS apple_genre, g.genres AS google_genre
+FROM app_store_apps AS a
+JOIN play_store_apps AS g
+USING (name);
+
+
+----Hannah's Query of Fun w/ Genres -ok, can't get the CTE to work
+WITH CTE_app_genre AS (
+SELECT a.name AS apple_app_name, g.name AS google_app_name, a.primary_genre AS apple_genre, g.genres AS google_genre
+FROM app_store_apps AS a
+JOIN play_store_apps AS g
+USING (name))
+
+
+
+
+
+
+
+SELECT DISTINCT p.name,
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGEVITY (has to be to the nearest '0.5')
+ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
+ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+MONEY(p.price) AS play_price,
+MONEY(a.price) AS app_price,
+CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END AS play_purchase_price,
+CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END AS app_purchase_price,
+CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END AS play_investment_analysis,
+CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END AS app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a  ---DOING A JOIN BECAUSE THE APP NEEDS TO BE IN BOTH TABLES
+USING(name)
+WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+ORDER BY orig_play_rating DESC
+LIMIT 10;
+
+WITH ----- AS (
+SELECT )
+
+
+
+---Trying plan c with genres and content rating 
+SELECT DISTINCT a.primary_genre AS apple_genre, p.genres AS google_genre, p.content_rating, p.name,
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
+ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGEVITY (has to be to the nearest '0.5')
+ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
+ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+MONEY(p.price) AS play_price,
+MONEY(a.price) AS app_price,
+CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END AS play_purchase_price,
+CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END AS app_purchase_price,
+CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END AS play_investment_analysis,
+CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END AS app_investment_analysis
+FROM play_store_apps AS p
+JOIN app_store_apps AS a  ---DOING A JOIN BECAUSE THE APP NEEDS TO BE IN BOTH TABLES
+USING(name)
+WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(p.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(p.price) AS NUMERIC) * 10000 END) = 10000 AND p.review_count >= 5000000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+AND (CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+  ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'great'
+    WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000
+    ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay'
+      ELSE 'do not invest' END) NOT LIKE 'do not invest'
+ORDER BY orig_play_rating DESC
+LIMIT 10;
 
 
 ---ASOS--apple
@@ -63,10 +217,3 @@ SELECT *
 FROM play_store_apps
 WHERE name='Zombie Catchers'
 
---Apps that are free in both 
-SELECT a.name AS apple, p.name AS google, CAST(a.price AS MONEY) AS apple_price, CAST(p.price AS MONEY) AS google_price
-FROM app_store_apps AS a
-INNER JOIN play_store_apps AS p
-USING (name)
-GROUP BY apple, google, apple_price, google_price
-ORDER BY apple_price;
