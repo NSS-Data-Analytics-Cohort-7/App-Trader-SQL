@@ -262,13 +262,21 @@ CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WHEN CA
  FROM play_store_apps AS p
  JOIN app_store_apps AS a
  USING (name)
+),
+Longevity_years AS (
+SELECT 
+    a.name,
+    ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
+    ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years
+FROM play_store_apps AS p
+JOIN app_store_apps AS a
+USING (rating)
 )
 SELECT DISTINCT a.primary_genre AS apple_genre, p.genres AS google_genre, p.content_rating, p.name,
 p.rating AS Orig_play_rating, a.rating AS Orig_app_rating,
 ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINE LONGEVITY (has to be to the nearest '0.5')
 ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating,
-ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
-ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
+longevity_years,
 MONEY(p.price) AS play_price,
 MONEY(a.price) AS app_price,
 play_purchase_price, 
@@ -280,6 +288,8 @@ JOIN app_store_apps AS a
 USING(name)
 JOIN CTE_CASES
 USING(name)
+JOIN Longevity_years
+USING (name)
 WHERE A.RATING IS NOT NULL AND P.RATING IS NOT NULL
 AND play_investment_analysis != 'do not invest' AND app_investment_analysis != 'do not invest'
 ORDER BY orig_play_rating DESC
