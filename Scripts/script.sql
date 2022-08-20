@@ -109,3 +109,22 @@ Join app_store_apps as a
 Using (name) 
 order by Orig_play_rating Desc;
 
+Select a.name, a.content_rating
+from app_store_apps as a
+where name = 'Clash Royale' or name = 'Clash of Clans' or name ='Boom Beach' or name = 'Geometry Dash Life' or
+name = 'Hay Day' or name = 'Instagram' or name = 'Subway Surfers' or name = 'Trivia Crack' or name = 'Candy Crush Saga'or
+name = 'WhatsApp Messenger'
+
+Select name, content_rating
+from play_store_apps
+where name = 'Clash Royale' or name = 'Clash of Clans' or name ='Boom Beach' or name = 'Geometry Dash Life' or
+name = 'Hay Day' or name = 'Instagram' or name = 'Subway Surfers' or name = 'Trivia Crack' or name = 'Candy Crush Saga'or
+name = 'WhatsApp Messenger'
+
+
+
+Select name, content_rating
+from app_store_apps 
+where name = 'Clash Royale' and name = 'Clash of Clans'
+
+
