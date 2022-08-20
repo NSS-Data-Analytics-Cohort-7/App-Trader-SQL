@@ -9,13 +9,33 @@ CASE WHEN CAST(MONEY(a.price) as NUMERIC) <= 1.00 THEN 10000
 From play_store_apps AS p
 Join app_store_apps AS a
 USING (name)
-Group By p.name, a.name, MONEY(a.price), MONEY(p.price), p.genres
+Group By p.name, a.name, MONEY(a.price), MONEY(p.price), p.genres, a.primary_genre
 Order by total_app_price, total_play_price
 
+-- Ordering the top 350 to see move to an EXCEL sheet. I am trying to break down what the top apps with the top ratings would look like.
+SELECT DISTINCT p.name, 
+p.rating AS Orig_play_rating, a.rating AS Orig_app_rating, a.price, p.price, p.genres, a.primary_genre
+From app_store_apps AS a
+Join play_store_apps AS p
+Using (name)
+Group By p.name, 
+Orig_play_rating, Orig_app_rating, a.price, p.price, p.genres, a.primary_genre
+Order by a.price, p.price, a.rating DESC, p. rating DESC
+LIMIT 347
+
+--Trying to see what the genre percentage would be.
+Select p.name, p.category,
+p.genres
+From play_store_apps AS p
+Group BY p.name, p.category,
+p.genres
+
+
+Order by p.genres, a.primary_genre
 
 Select *
-From app_store_apps
-Order By content_rating
+From play_store_apps
+Order By genres
 
 Select Distinct(name)
 From app_store_apps
@@ -155,5 +175,7 @@ ROUND(1+(ROUND(ROUND(p.rating/5,1)*5,1)/.5),0) AS play_longevity_years,
 ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) AS app_longevity_years,
 MONEY(p.price) AS play_price,
 MONEY(a.price) AS app_price,
+
+
     
-    
+
