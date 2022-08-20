@@ -86,6 +86,7 @@ ORDER BY orig_play_rating DESC
 --- ALSO - had to make a massive WHERE statement because where does not take an alias :( 
 
 ----ROUND MATH  4.4 / 5 = .88 = .9 THEN  .9 * 5 = 4.5  
+--- 4.8/5 = .96 THEN 1.0 * 5 = 5.0
 
 ---- WORKBOOK BELOW
 SELECT * 
@@ -118,7 +119,7 @@ ORDER BY price DESC
 Limit 10
 
 
-SELECT DISTINCT p.name, 
+SELECT DISTINCT p.name, cast(a.size_bytes AS NUMERIC) AS size,
 p.rating AS Orig_play_rating, a.rating AS Orig_app_rating, 
 ROUND(ROUND(p.rating/5,1)*5,1) AS play_rating, ---NEED TO DETERMINING LONGETIVITY
 ROUND(ROUND(a.rating/5,1)*5,1) AS app_rating, 
@@ -154,7 +155,7 @@ AND (CASE WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) >= 10 AND (CASE WH
     WHEN ROUND(1+(ROUND(ROUND(a.rating/5,1)*5,1)/.5),0) = 9 AND (CASE WHEN CAST(MONEY(a.price) as NUMERIC) < 1.01 THEN 10000 
     ELSE CAST(MONEY(a.price) AS NUMERIC) * 10000 END) = 10000 AND CAST(a.review_count AS numeric) >= 200000 THEN 'okay' 
       ELSE 'do not invest' END) NOT LIKE 'do not invest'
-ORDER BY play_investment_analysis DESC;
+ORDER BY size;
 ---HIGHEST COMBINED APP RATINGS SORTED FIRST 
     
 ----ROUND MATH  4.4 / 5 = .88 = .9 THEN  .9 * 5 = 4.5                                 
